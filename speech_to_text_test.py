@@ -1,49 +1,31 @@
 import speech_recognition as sr
-#DO: pip install SpeechRecognition
+import sounddevice as sd
+from scipy.io.wavfile import write
+import numpy as np
 
-# enter the name of usb microphone that you found
-mic_name = "mic name" #<- PUT YOUR MIC'S NAME HERE
+fs = 48000  # Sample rate
+seconds = 3  # Duration of recording
+sd.default.device = "MIC NAME HERE"
+myrecording = sd.rec(int(seconds * fs), samplerate=fs, channels=2)
 
-# Sample rate is how often values are recorded
-sample_rate = 48000
+sd.wait()  # Wait until recording is finished
+y = (np.iinfo(np.int32).max * (myrecording / np.abs(myrecording).max())).astype(np.int32)
+write('output.wav', fs, y)
+audio = 'output.wav'
+# use the audio file as the audio source
 
-# Chunk is like a buffer. It stores 2048 samples (bytes of data) here.
-# it is advisable to use powers of 2 such as 1024 or 2048
-chunk_size = 2048
-
-# Initialize the recognizer
 r = sr.Recognizer()
 
-# generate a list of all audio cards/microphones
-mic_list = sr.Microphone.list_microphone_names()
-print(mic_list)
+with sr.AudioFile(audio) as source:
+	# reads the audio file. Here we use record instead of
+	# listen
+	audio = r.record(source)
 
-# the following loop aims to set the device ID of the mic that
-# we specifically want to use to avoid ambiguity.
-for i, microphone_name in enumerate(mic_list):
-	if microphone_name == mic_name:
-		device_id = i
+try:
+	print("The audio file contains: " + r.recognize_google(audio))
 
-# use the microphone as source for input. Here, we also specify
-# which device ID to specifically look for incase the microphone
-# is not working, an error will pop up saying "device_id undefined"
-with sr.Microphone(device_index=device_id, sample_rate=sample_rate,
-				   chunk_size=chunk_size) as source:
-	# wait for a second to let the recognizer adjust the
-	# energy threshold based on the surrounding noise level
-	r.adjust_for_ambient_noise(source)
-	print("Say Something")
-	# listens for the user's input
-	audio = r.listen(source)
+except sr.UnknownValueError:
+	print("Google Speech Recognition could not understand audio")
 
-	try:
-		text = r.recognize_google(audio)
-		print("you said: " + text)
-
-	# error occurs when google could not understand what was said
-
-	except sr.UnknownValueError:
-		print("Google Speech Recognition could not understand audio")
-
-	except sr.RequestError as e:
-		print("Could not request results from Google Speech Recognition service; {0}".format(e))
+except sr.RequestError as e:
+	print("Could not request results from Google Speech Recognition service; {0}".format(e))
