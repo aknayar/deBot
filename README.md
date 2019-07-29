@@ -1,2 +1,2 @@
 # deBot
-Debate claim rater based on speech quality and argument verity.
+Rates a debate speech based on speech quality and argument verity.
