@@ -1,6 +1,6 @@
 from nltk import tokenize
 from textstat.textstat import textstatistics, legacy_round
-
+import textstat
 
 # Splits the text into sentences
 def break_sentences(text):
@@ -50,7 +50,19 @@ def flesch_reading_ease(text):
                 divided by number of sentences)
           ASW = average word length in syllables (number of syllables
                 divided by number of words)
+        The maximum possible score is 121.22. Negative scores are valid.
     """
-    fre = 206.835 - float(1.015 * avg_sentence_length(text)) - float(84.6 * avg_syllables_per_word(text))
-    return legacy_round(fre, 2)
+    return textstat.flesch_reading_ease(text)
 
+def flesch_kincaid_grade(text):
+    """
+    Implements the Flesch-Kincaid reading level formula:
+    Flesh-Kincaid Grade Level = 0.39*ASL + 11.8*ASW - 15.59
+    Here,
+        ASL = average sentence length (number of words divided by number of sentences)
+        ASW = average word length in syllables (number of syllables divided by number of words)
+    :param text: The text
+    :return: a grade level from 0-18, where 0 is the easiest, and 18 is the hardest.
+    The goal is to aim for a score of 8 to ensure that 80% of American can read/understand it.
+    """
+    return textstat.flesch_kincaid_grade(text)
