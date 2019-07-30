@@ -9,10 +9,15 @@ def excel_to_arrays(filepath):
     :param
         filepath: raw str, the file path to the csv
     :return:
-        statements: numpy.ndarray of size 
+        statements: numpy.ndarray of size (M,)
+                    An array of all the statements
+        ratings:    numpy.ndarray of size (M,)
+                    An array of all the ratings
     """
-    data = pd.read_excel(filepath)
+    data = pd.read_excel(filepath, sheet_name='Sheet1')
     statements = np.array(list(data["Statement"]))
     ratings = np.array(list(data["Rating"]))
     return statements, ratings
+
+
 
