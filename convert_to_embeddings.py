@@ -36,19 +36,25 @@ def to_embeddings(arr_statements):
     """
     :param
     text:string of our captions
+    Take in M things (1, to a (1,50) Then put them together
     :return
     vectors: a (50,)np.ndarray that represents out caption in semantic space
     """
-
-    vectors = np.zeros((len(arr_statements),))
+    m = arr_statements.shape()[0]
+    main_vector = np.zeros(m,)
     for sentence in arr_statements:
+        vectors = np.zeros((50,))
 
         if sentence not in glove:
             pass
         else:
-            sentence_vector = glove[sentence]
+            word_vector = glove[sentence]
+
+            vectors += word_vector
+
+        main_vector = np.append(main_vector, vectors)
 
 
-            vectors += sentence_vector
 
-    return vectors.reshape((1, len(arr_statements)))
+
+    return vectors.reshape((m, 50))
