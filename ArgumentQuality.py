@@ -17,6 +17,10 @@ from gensim.models.keyedvectors import KeyedVectors
 from sklearn.decomposition import TruncatedSVD
 
 ghost = KeyedVectors.load_word2vec_format("ghost.6B.50d.txt.w2v", binary=False)
+
+
+
+
 train = pd.read_csv("train.csv")
 
 stance1 = np.array(train["evidence_1_stance"])
@@ -153,13 +157,13 @@ evidence_2 = [
     panda["evidence_2"][i] for i in range(len(stance1)) if stance1[i] == stance2[i]
 ]
 y_train1 = [
-    round(panda["evidence_1_detection_score"][i], 1)
+    panda["evidence_1_detection_score"][i]
     for i in range(len(stance1))
     if stance1[i] == stance2[i]
 ]
 # ytrain = np.array(y_train)
 y_train2 = [
-    round(panda["evidence_2_detection_score"][i], 1)
+    panda["evidence_2_detection_score"][i]
     for i in range(len(stance1))
     if stance1[i] == stance2[i]
 ]
@@ -167,16 +171,16 @@ y_train2 = [
 x_train1 = []
 indices_1 = []
 for index, i in enumerate(evidence_1):
-    if counters[int(y_train1[index] * 10) - 1] >= 37:
-        continue
-    indices_1.append(index)
-    print(
-        y_train1[index],
-        int(y_train1[index] * 10) - 1,
-        counters[int(y_train1[index] * 10) - 1],
-        counters,
-    )
-    counters[int(y_train1[index] * 10) - 1] += 1
+    #if counters[int(y_train1[index] * 10) - 1] >= 37:
+    #    continue
+    #indices_1.append(index)
+    #print(
+        #y_train1[index],
+        #int(y_train1[index] * 10) - 1,
+        #counters[int(y_train1[index] * 10) - 1],
+        #counters,
+    #)
+    #counters[int(y_train1[index] * 10) - 1] += 1
 
     i = i.lower().replace("[ref]", "")
     i = "".join(c for c in i if c.isdigit() or c.isalpha() or c == " ")
@@ -197,16 +201,16 @@ for i in x_train1:
 x_train2 = []
 indices_2 = []
 for index, i in enumerate(evidence_2):
-    if counters[int(y_train2[index] * 10) - 1] >= 37:
-        continue
-    indices_2.append(index)
-    print(
-        y_train2[index],
-        int(y_train1[index] * 10) - 1,
-        counters[int(y_train2[index] * 10) - 1],
-        counters,
-    )
-    counters[int(y_train2[index] * 10) - 1] += 1
+    #if counters[int(y_train2[index] * 10) - 1] >= 37:
+    #    continue
+    #indices_2.append(index)
+    #print(
+        #y_train2[index],
+        #int(y_train1[index] * 10) - 1,
+        #counters[int(y_train2[index] * 10) - 1],
+        #counters,
+    #)
+    #counters[int(y_train2[index] * 10) - 1] += 1
 
     i = i.lower().replace("[ref]", "")
     i = "".join(c for c in i if c.isdigit() or c.isalpha() or c == " ")
@@ -224,11 +228,13 @@ for i in x_train2:
         i.append(np.zeros(50))
 # xtest = np.array(x_test)
 xtrain = np.array(x_train1 + x_train2)
-ytrain = np.array([y_train1[i] for i in indices_1] + [y_train2[i] for i in indices_2])
+#ytrain = np.array([y_train1[i] for i in indices_1] + [y_train2[i] for i in indices_2])
+ytrain = np.array(y_train1 + y_train2)
+
 print(Counter(ytrain).most_common())
 
 dim_input = 50
-dim_recurrent = 100
+dim_recurrent = 150
 dim_output = 1
 rnn = RNN(dim_input, dim_recurrent, dim_output)
 optimizer = Adam(rnn.parameters)
@@ -241,7 +247,7 @@ def coolKidsLoss(pred, actual):
     return mg.mean(mg.square(pred - actual))
 
 
-batch_size = 20
+batch_size = 1
 
 for epoch_cnt in range(100):
     idxs = np.arange(len(xtrain))  # -> array([0, 1, ..., 9999])
@@ -271,6 +277,8 @@ for epoch_cnt in range(100):
         plotter.set_train_batch({"loss": loss.item()}, batch_size=batch_size)
     plotter.set_train_epoch()
 
+
+
 y_test = [
     panda["evidence_2_detection_score"][i]
     for i in range(len(stance2))
@@ -284,12 +292,20 @@ for i in range(len(ytrain)):
     w = np.ascontiguousarray(np.swapaxes(np.array(old).reshape(1, 78, 50), 0, 1))
     pred = rnn(w)
     true = ytrain[i]
+    #print(pred, true)
     diff += mg.abs(pred - true)
     sum += true
     # print(rnn(ghost[x_train[i]]), score_2[i])
 print("diff: ", diff / len(ytrain))
 print("mean: ", sum / len(ytrain))
 print("std: ", np.std(ytrain))
+
+i = 1
+old = xtrain[i]
+w = np.ascontiguousarray(np.swapaxes(np.array(old).reshape(1, 78, 50), 0, 1))
+pred = rnn(w)
+true = ytrain[i]
+print(pred, true)
 
 params = rnn.parameters
 npparams = np.asarray(params)
