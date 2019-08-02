@@ -146,7 +146,6 @@ for index, i in enumerate(evidence_1):
     row = []
     for word in i:
         try:
-
             row.append(glove[word])
         except:
             continue
