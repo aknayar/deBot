@@ -14,6 +14,7 @@ Running this file trains an argument quality model and saves it to a file Argume
 Do not run this every time you want to test the model on your data.
 Only run this once at the beginning to create the ArgumentQuality.npy file
     or to retrain the model.
+This file should take a few minutes to run as it trains over 10 epochs on thousands of data items.
 """
 
 # Loads glove, which contains english words and their embeddings into 50-dimensional vectors
