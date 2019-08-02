@@ -1,39 +1,19 @@
 import pandas as pd
+import mygrad as mg
+import numpy as np
+import re
 from mynn.layers.dense import dense
 from mynn.initializers.glorot_normal import glorot_normal
 from mynn.optimizers.adam import Adam
 from mygrad.nnet.losses import softmax_crossentropy
-import mygrad as mg
-import numpy as np
 from gensim.models.keyedvectors import KeyedVectors
+from noggin import create_plot
 
-ghost = KeyedVectors.load_word2vec_format("ghost.6B.50d.txt.w2v", binary=False)
-
-
-train = pd.read_csv("train.csv")
-
-stance1 = np.array(train["evidence_1_stance"])
-stance2 = np.array(train["evidence_2_stance"])
-evidence_1 = [
-    train["evidence_1"][i] for i in range(len(stance1)) if stance1[i] == stance2[i]
-]
-evidence_2 = [
-    train["evidence_2"][i] for i in range(len(stance1)) if stance1[i] == stance2[i]
-]
-y_train = [
-    train["evidence_1_detection_score"][i]
-    for i in range(len(stance1))
-    if stance1[i] == stance2[i]
-]
-y_test = [
-    train["evidence_2_detection_score"][i]
-    for i in range(len(stance1))
-    if stance1[i] == stance2[i]
-]
-np.equal(stance1, stance2)
+# Loads glove, which contains english words and their embeddings into 50-dimensional vectors
+glove = KeyedVectors.load_word2vec_format("glove.6B.50d.txt.w2v", binary=False)
 
 
-class RNN:
+class RNN:  # The RNN class, which passes the data through a gated recurrent unit to convert each sentence into an array
     def __init__(self, dim_input, dim_recurrent, dim_output):
         """ Initializes all layers needed for RNN
 
@@ -126,13 +106,12 @@ class RNN:
         return self.fc_x2h.parameters + self.fc_h2h.parameters + self.fc_h2y.parameters
 
 
-from collections import Counter
-
 counters = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
+# Reads the csv file containing the train data
 panda = pd.read_csv("train.csv")
-import re
 
+# Creates arrays containing the evidence given that both stances are the same.
 stance1 = np.array(panda["evidence_1_stance"])
 stance2 = np.array(panda["evidence_2_stance"])
 evidence_1 = [
@@ -141,6 +120,8 @@ evidence_1 = [
 evidence_2 = [
     panda["evidence_2"][i] for i in range(len(stance1)) if stance1[i] == stance2[i]
 ]
+
+# Creates arrays containing the scores of the evidence given that both stances are the same.
 y_train1 = [
     panda["evidence_1_detection_score"][i]
     for i in range(len(stance1))
@@ -153,6 +134,7 @@ y_train2 = [
     if stance1[i] == stance2[i]
 ]
 
+# Takes in the text and converts it into an array of sentences.
 x_train1 = []
 indices_1 = []
 for index, i in enumerate(evidence_1):
@@ -165,14 +147,17 @@ for index, i in enumerate(evidence_1):
     for word in i:
         try:
 
-            row.append(ghost[word])
+            row.append(glove[word])
         except:
             continue
     x_train1.append(row)
+
+# Makes all sentence arrays the same shape by adding arrays of zeros to the end.
 for i in x_train1:
     for j in range(len(i), 78):
         i.append(np.zeros(50))
 
+# Repeats the process above for the 2nd half of the train data
 x_train2 = []
 indices_2 = []
 for index, i in enumerate(evidence_2):
@@ -184,7 +169,7 @@ for index, i in enumerate(evidence_2):
     row = []
     for word in i:
         try:
-            row.append(ghost[word])
+            row.append(glove[word])
         except:
             continue
     x_train2.append(row)
@@ -192,32 +177,33 @@ for i in x_train2:
     for j in range(len(i), 78):
         i.append(np.zeros(50))
 
+# Concatenates the 2 sets of train data
 xtrain = np.array(x_train1 + x_train2)
 
 ytrain = np.array(y_train1 + y_train2)
 
-print(Counter(ytrain).most_common())
-
+# Initializes the optimizer and the model with parameters.
 dim_input = 50
 dim_recurrent = 150
 dim_output = 1
 rnn = RNN(dim_input, dim_recurrent, dim_output)
 optimizer = Adam(rnn.parameters)
 
-from noggin import create_plot
 
 plotter, fig, ax = create_plot(metrics=["loss"])
 
-
-def coolKidsLoss(pred, actual):
+# L2 loss function (mean square distance)
+def l2loss(pred, actual):
     return mg.mean(mg.square(pred - actual))
 
 
 batch_size = 1
 
-for epoch_cnt in range(100):
+# Trains the model over 10 epochs.
+for epoch_cnt in range(10):
     idxs = np.arange(len(xtrain))
     np.random.shuffle(idxs)
+    print("epoch", epoch_cnt)
 
     for batch_cnt in range(0, len(xtrain) // batch_size):
         batch_indices = idxs[batch_cnt * batch_size : (batch_cnt + 1) * batch_size]
@@ -227,7 +213,7 @@ for epoch_cnt in range(100):
         prediction = rnn(batch)
         truth = ytrain[batch_indices]
 
-        loss = coolKidsLoss(prediction, truth)
+        loss = l2loss(prediction, truth)
 
         loss.backward()
 
@@ -238,14 +224,10 @@ for epoch_cnt in range(100):
     plotter.set_train_epoch()
 
 
-y_test = [
-    panda["evidence_2_detection_score"][i]
-    for i in range(len(stance2))
-    if stance1[i] == stance2[i]
-]
 diff = 0
 sum = 0
-print(len(ytrain), len(xtrain))
+
+# Tests the model
 for i in range(len(ytrain)):
     old = xtrain[i]
     w = np.ascontiguousarray(np.swapaxes(np.array(old).reshape(1, 78, 50), 0, 1))
@@ -253,17 +235,15 @@ for i in range(len(ytrain)):
     true = ytrain[i]
     diff += mg.abs(pred - true)
     sum += true
-print("diff: ", diff / len(ytrain))
-print("mean: ", sum / len(ytrain))
-print("std: ", np.std(ytrain))
+
 
 i = 1
 old = xtrain[i]
 w = np.ascontiguousarray(np.swapaxes(np.array(old).reshape(1, 78, 50), 0, 1))
 pred = rnn(w)
 true = ytrain[i]
-print(pred, true)
 
+# Saves the model as "ArgumentQualityModel.npy"
 params = rnn.parameters
 npparams = np.asarray(params)
 np.save("ArgumentQualityModel", npparams)
