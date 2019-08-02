@@ -192,8 +192,22 @@ optimizer = Adam(rnn.parameters)
 
 plotter, fig, ax = create_plot(metrics=["loss"])
 
-# L2 loss function (mean square distance)
-def l2loss(pred, actual):
+
+def l2loss(pred, actual):  # L2 loss function (mean square distance)
+    """
+
+    Parameters
+    ----------
+    pred: Union[mygrad.Tensor, numpy.ndarray]
+        A tensor or numpy array containing the model's predicted values
+    actual: Union[mygrad.Tensor, numpy.ndarray]
+        A tensor or numpy array containing the actual values
+
+    Returns
+    -------
+    mg.Tensor
+        A tensor containing the mean square distance between the prediction and actual values.
+    """
     return mg.mean(mg.square(pred - actual))
 
 

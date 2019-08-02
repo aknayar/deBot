@@ -6,7 +6,20 @@ from gensim.models.keyedvectors import KeyedVectors
 glove = KeyedVectors.load_word2vec_format("glove.6B.50d.txt.w2v", binary=False)
 
 
-def embed_sentence(sentences):  # Embeds each word in a sentence using glove.
+def embed_sentence(sentences):
+    """
+    Takes a list of sentences and embeds each word in every sentence using glove.
+
+    Parameters
+    ----------
+    sentences: List
+        An list of sentences to be embedded
+
+    Returns
+    -------
+    numpy.ndarray, shape = (len(sentences), maximum length of a single sentence, 50)
+        A numpy array containing each of the word embeddings for each sentence.
+    """
     ret = []
     m = 0
     for i in sentences:
