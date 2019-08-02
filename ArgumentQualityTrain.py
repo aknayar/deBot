@@ -9,6 +9,13 @@ from mygrad.nnet.losses import softmax_crossentropy
 from gensim.models.keyedvectors import KeyedVectors
 from noggin import create_plot
 
+"""
+Running this file trains an argument quality model and saves it to a file ArgumentQualityModel.npy.
+Do not run this every time you want to test the model on your data.
+Only run this once at the beginning to create the ArgumentQuality.npy file
+    or to retrain the model.
+"""
+
 # Loads glove, which contains english words and their embeddings into 50-dimensional vectors
 glove = KeyedVectors.load_word2vec_format("glove.6B.50d.txt.w2v", binary=False)
 

@@ -2,6 +2,7 @@ import re
 import numpy as np
 from gensim.models.keyedvectors import KeyedVectors
 
+
 # Initializes glove, which contains the embeddings for each word.
 glove = KeyedVectors.load_word2vec_format("glove.6B.50d.txt.w2v", binary=False)
 
