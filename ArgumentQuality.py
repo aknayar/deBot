@@ -82,7 +82,6 @@ class RNN:
         )
         self.bh = mg.Tensor(np.random.randn(dim_recurrent))
 
-
     def __call__(self, x):
         """ Performs the full forward pass for the RNN.
 
@@ -113,7 +112,6 @@ class RNN:
         )
         return self.fc_h2y(h[-1])
 
-
     @property
     def parameters(self):
         """ A convenience function for getting all the parameters of our model.
@@ -125,10 +123,7 @@ class RNN:
         Tuple[Tensor, ...]
             A tuple containing all of the learnable parameters for our model
         """
-        return (
-            self.fc_x2h.parameters + self.fc_h2h.parameters + self.fc_h2y.parameters
-        )
-
+        return self.fc_x2h.parameters + self.fc_h2h.parameters + self.fc_h2y.parameters
 
 
 from collections import Counter
@@ -228,17 +223,13 @@ for epoch_cnt in range(100):
         batch_indices = idxs[batch_cnt * batch_size : (batch_cnt + 1) * batch_size]
 
         old = xtrain[batch_indices]
-        batch = np.ascontiguousarray(
-            np.swapaxes(old, 0, 1)
-        )
+        batch = np.ascontiguousarray(np.swapaxes(old, 0, 1))
         prediction = rnn(batch)
         truth = ytrain[batch_indices]
 
         loss = coolKidsLoss(prediction, truth)
 
-
         loss.backward()
-
 
         optimizer.step()
         loss.null_gradients()
