@@ -5,7 +5,7 @@ from ArgumentQualityTrain import RNN
 
 if __name__ == "__main__":
     glove = KeyedVectors.load_word2vec_format("glove.6B.50d.txt.w2v", binary=False)
-    params = np.load('ArgumentQualityModel.npy', allow_pickle=True)
+    params = np.load("ArgumentQualityModel.npy", allow_pickle=True)
     model = RNN(50, 10, 21)
     model.fc_x2h.weight, model.fc_x2h.bias, model.fc_h2h.weight, model.fc_h2y.weight, model.fc_h2y.bias, model.Uz, model.Wz, model.bz, model.Ur, model.Wr, model.br, model.Uh, model.Wh, model.bh = (
         params[0],
@@ -40,5 +40,5 @@ if __name__ == "__main__":
     for i in test:
         for j in range(len(i), 78):
             i.append(np.zeros(50))
-    w = np.ascontiguousarray(np.swapaxes(np.array(test).reshape(1,78,50),0,1))
-    print(np.argmax(model(w))/20)
+    w = np.ascontiguousarray(np.swapaxes(np.array(test).reshape(1, 78, 50), 0, 1))
+    print(np.argmax(model(w)) / 20)

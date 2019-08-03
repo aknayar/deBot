@@ -10,8 +10,6 @@ from gensim.models.keyedvectors import KeyedVectors
 from noggin import create_plot
 
 
-
-
 """
 Running this file trains an argument quality model and saves it to a file ArgumentQualityModel.npy.
 Do not run this every time you want to test the model on your data.
@@ -21,7 +19,6 @@ This file should take a few minutes to run as it trains over 10 epochs on thousa
 """
 
 # Loads glove, which contains english words and their embeddings into 50-dimensional vectors
-
 
 
 def l2loss(pred, actual):  # L2 loss function (mean square distance)
@@ -40,6 +37,8 @@ def l2loss(pred, actual):  # L2 loss function (mean square distance)
         A tensor containing the mean square distance between the prediction and actual values.
     """
     return mg.mean(mg.square(pred - actual))
+
+
 class RNN:  # The RNN class, which passes the data through a gated recurrent unit to convert each sentence into an array
     def __init__(self, dim_input, dim_recurrent, dim_output):
         """ Initializes all layers needed for RNN
@@ -130,7 +129,22 @@ class RNN:  # The RNN class, which passes the data through a gated recurrent uni
         Tuple[Tensor, ...]
             A tuple containing all of the learnable parameters for our model
         """
-        return self.fc_x2h.parameters + self.fc_h2h.parameters + self.fc_h2y.parameters + (self.Uz, self.Wz, self.bz, self.Ur, self.Wr, self.br, self.Uh, self.Wh, self.bh)
+        return (
+            self.fc_x2h.parameters
+            + self.fc_h2h.parameters
+            + self.fc_h2y.parameters
+            + (
+                self.Uz,
+                self.Wz,
+                self.bz,
+                self.Ur,
+                self.Wr,
+                self.br,
+                self.Uh,
+                self.Wh,
+                self.bh,
+            )
+        )
 
 
 def round20(n):
@@ -304,7 +318,7 @@ if __name__ == "__main__":
         print("epoch", epoch_cnt)
 
         for batch_cnt in range(0, len(xtrain) // batch_size):
-            batch_indices = idxs[batch_cnt * batch_size: (batch_cnt + 1) * batch_size]
+            batch_indices = idxs[batch_cnt * batch_size : (batch_cnt + 1) * batch_size]
 
             old = xtrain[batch_indices]
             batch = np.ascontiguousarray(np.swapaxes(old, 0, 1))
@@ -347,6 +361,17 @@ if __name__ == "__main__":
     sum = 0
 
     for i in range(len(ytrain)):
-        sum+=np.abs((np.argmax(rnn(np.ascontiguousarray(np.swapaxes(np.array(xtrain[i]).reshape(1,78,50),0,1))))/20)-(ytrain[i]/20))
-    print(sum/len(ytrain))
-
+        sum += np.abs(
+            (
+                np.argmax(
+                    rnn(
+                        np.ascontiguousarray(
+                            np.swapaxes(np.array(xtrain[i]).reshape(1, 78, 50), 0, 1)
+                        )
+                    )
+                )
+                / 20
+            )
+            - (ytrain[i] / 20)
+        )
+    print(sum / len(ytrain))
