@@ -1,4 +1,11 @@
-import star_wars_textgeneration
+import time
+import numpy as np
+#%matplotlib notebook
+import matplotlib.pyplot as plt
+
+from collections import Counter
+from collections import defaultdict
+import star_wars_textgeneration as swtg
 
 #the dot is look into the same directory as the folder
 #Getting the information of the 1st Star Wars Movie
@@ -46,6 +53,6 @@ all_3starwars = starwarIV + starwarV + starwarVI
 generates the actual text that is to be randomized.
 """
 t0 = time.time()
-lm3 = train_lm(all_3starwars, 11)
+lm3 = swtg.train_lm(all_3starwars, 11)
 
-print(generate_text(lm3, 11, "Hello there", 2000))
+print(swtg.generate_text(lm3, 11, "Hello there", 2000))
